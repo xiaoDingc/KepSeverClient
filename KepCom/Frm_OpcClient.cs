@@ -5,26 +5,119 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace KepCom
 {
-    public partial class Form1 : Form
+    public partial class Frm_OpcClient : Form
     {
-        public Form1()
+        public Frm_OpcClient()
         {
             InitializeComponent();
+            this.Load += Frm_OpcClient_Load;
         }
-        #region 私有变量
 
-        private OPCServer kepServer = new OPCServer();
+        #region 私有变量
         private OPCBrowser opcBrowser;
         private Dictionary<string, OPCGroup> groupMap = new Dictionary<string, OPCGroup>();
         private Dictionary<int, OPCItem> itemMap = new Dictionary<int, OPCItem>();
         #endregion
-        //此方法连接OPCServer上的一个Program.
+
+        #region 变量区
+        //定义OPC服务器
+        private OPCServer kepServer;
+        //定义OPC服务器组集
+        OPCGroups kepGruops;
+        //定义OPC服务器组
+        OPCGroup kepGruop;
+        //定义OPC服务器项目集
+        OPCAutomation.OPCItems kepItems;
+        //定义OPC服务器浏览器
+        OPCBrowser kepBrowser;
+        //定义OPC变量集合
+        List<OpcHelperItem> OPCList = new List<OpcHelperItem>();
+        List<int> serverHandles = new List<int>();
+        List<int> ClientHandles = new List<int>();
+        List<string> TempIDList = new List<string>();
+        //定义返回的OPC标签错误
+        Array iErrors;
+        //定义要添加的OPC标签的标识符
+        Array strTempIDs;
+        Array strClientHandles;
+        Array strServerHandles;
+        Array readServerHandles;
+        Array writeServerHandles;
+        Array writeArrayHandles;
+        Array readError;
+        Array writeError;
+        int readTransID;
+        int writeTransID;
+        int readCancelID;
+        int writeCancelID;
+        #endregion
+
+        private void Frm_OpcClient_Load(object sender, EventArgs e)
+        {
+            this.btn_RefreshList_Click(null, null);
+            this.timer1.Interval = 1000;
+            this.timer1.Enabled = true;
+            this.timer1.Tick += Timer1_Tick;
+        }
+
+        private void Timer1_Tick(object sender, EventArgs e)
+        {
+            this.lbl_CurrentTime.Text = "当前时间: " + DateTime.Now.ToLongTimeString();
+
+            if (kepServer != null)
+            {
+                if (kepServer.ServerState == (int)OPCServerState.OPCRunning)
+                {
+                    this.lbl_Status.Text = Enum.GetName(typeof(StatusHelper.ConnectHelper),StatusHelper.ConnectHelper.Connect);
+                }
+                else
+                {
+                    this.lbl_Status.Text = Enum.GetName(typeof(StatusHelper.ConnectHelper), StatusHelper.ConnectHelper.DisConnect);
+                }
+            }
+
+            //if (this.OPCList.Count > 0)
+            //{
+            //    if (kepServer != null)
+            //    {
+            //        kepGruop.AsyncRead(this.OPCList.Count, ref readServerHandles, out readError, readTransID, out readCancelID);
+            //    }
+            //}
+        }
+
+        private void btn_RefreshList_Click(object sender, EventArgs e)
+        {
+            this.cmb_ServerNode.Items.Clear();
+            IPHostEntry iphost = Dns.GetHostEntry(Environment.MachineName);
+            if (iphost.AddressList.Length>0)
+            {
+                foreach (var item in iphost.AddressList)
+                {
+                    string hostName = Dns.GetHostEntry(item.ToString()).HostName;
+                    if (!this.cmb_ServerNode.Items.Contains(hostName))
+                    {
+                        this.cmb_ServerNode.Items.Add(hostName);
+                    }
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+        /// <summary>
+        /// 此方法连接OPCServer上的一个Program.
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="prog"></param>
+        /// <returns></returns>
         public bool Connect(string host, string prog)
         {
             try
@@ -62,7 +155,7 @@ namespace KepCom
         //用来标识每一个OPCItem数据的唯一标识
         private void SetItemsClientHandle()
         {
-            foreach (OPCItem item in this.itemMap.Values)
+            foreach (var item in this.itemMap.Values)
             {
                 item.ClientHandle = item.GetHashCode();
             }
@@ -271,6 +364,82 @@ namespace KepCom
                 }
                
             } 
+        }
+
+        /// <summary>
+        /// 确定本地主机时,动态改变连接的kepServer主机名
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void cmb_ServerNode_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            this.cmb_ServerName.Items.Clear();
+            kepServer = new OPCServer();
+            object serverList = kepServer.GetOPCServers(this.cmb_ServerNode.Text.Trim());
+            foreach (var item in (Array)serverList)
+            {
+                this.cmb_ServerName.Items.Add(item);
+            }
+        }
+
+        /// <summary>
+        /// 连接kepServer 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btn_Connect_Click(object sender, EventArgs e)
+        {
+           //获取连接状态
+            if (this.btn_Connect.Text==Enum.GetName(typeof(StatusHelper.ConnectHelper), StatusHelper.ConnectHelper.Connect))
+            {
+                try
+                {
+                    kepServer.Connect(this.cmb_ServerName.Text.Trim(), this.cmb_ServerNode.Text.Trim());
+
+                }
+                catch (Exception exception)
+                {
+                    MessageBox.Show(exception.Message + "连接失败!");
+                }
+
+                this.btn_Connect.Text = Enum.GetName(typeof(StatusHelper.ConnectHelper),
+                    StatusHelper.ConnectHelper.DisConnect);
+                //kepGroups对象赋值
+                kepGruops = kepServer.OPCGroups;
+                //kepGroups属性设置
+                kepGruops.DefaultGroupDeadband = 0;
+                kepGruops.DefaultGroupIsActive = true;
+
+                kepGruop = kepGruops.Add("group1");
+                kepGruop.IsActive = true;
+                kepGruop.IsSubscribed = true;
+                kepGruop.UpdateRate = 500;
+                kepGruop.AsyncReadComplete += KepGruop_AsyncReadComplete;
+
+            }
+            else
+            {
+                if (kepServer!=null)
+                {
+                    kepServer.Disconnect();
+                    kepServer = null;
+                    this.btn_Connect.Text = Enum.GetName(typeof(StatusHelper.ConnectHelper),StatusHelper.ConnectHelper.Connect);
+                }
+            }
+        }
+
+        private void KepGruop_AsyncReadComplete(int TransactionID, int NumItems, ref Array ClientHandles, ref Array ItemValues, ref Array Qualities, ref Array TimeStamps, ref Array Errors)
+        {
+            for (int i = 1; i <= NumItems; i++)
+            {
+                object value = ItemValues.GetValue(i);
+               
+                if (value!=null)
+                {
+                    this.OPCList[i - 1].Value = value.ToString();
+                    this.OPCList[i - 1].Time = ((DateTime)TimeStamps.GetValue(1)).ToLocalTime();
+                }
+            }
         }
     }
 }
