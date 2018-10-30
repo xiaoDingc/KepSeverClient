@@ -33,9 +33,6 @@
             this.tsslblItemCount = new System.Windows.Forms.Label();
             this.tsslblGroupCount = new System.Windows.Forms.Label();
             this.tvwGroupList = new System.Windows.Forms.TreeView();
-            this.btnStart = new System.Windows.Forms.Button();
-            this.lstviewItems = new System.Windows.Forms.ListView();
-            this.lbShow = new System.Windows.Forms.Label();
             this.btn_Connect = new System.Windows.Forms.Button();
             this.btn_RefreshList = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
@@ -55,6 +52,7 @@
             this.Tag = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Value = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.List_Items = new System.Windows.Forms.ListBox();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_data)).BeginInit();
             this.SuspendLayout();
@@ -88,40 +86,11 @@
             // 
             // tvwGroupList
             // 
-            this.tvwGroupList.Location = new System.Drawing.Point(16, 230);
+            this.tvwGroupList.Location = new System.Drawing.Point(16, 135);
             this.tvwGroupList.Name = "tvwGroupList";
-            this.tvwGroupList.Size = new System.Drawing.Size(252, 175);
+            this.tvwGroupList.Size = new System.Drawing.Size(206, 175);
             this.tvwGroupList.TabIndex = 3;
             this.tvwGroupList.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tvwGroupList_MouseDown);
-            // 
-            // btnStart
-            // 
-            this.btnStart.Location = new System.Drawing.Point(798, 106);
-            this.btnStart.Name = "btnStart";
-            this.btnStart.Size = new System.Drawing.Size(75, 23);
-            this.btnStart.TabIndex = 6;
-            this.btnStart.Text = "开始加载";
-            this.btnStart.UseVisualStyleBackColor = true;
-            this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
-            // 
-            // lstviewItems
-            // 
-            this.lstviewItems.Location = new System.Drawing.Point(274, 230);
-            this.lstviewItems.Name = "lstviewItems";
-            this.lstviewItems.Size = new System.Drawing.Size(281, 175);
-            this.lstviewItems.TabIndex = 7;
-            this.lstviewItems.UseCompatibleStateImageBehavior = false;
-            this.lstviewItems.View = System.Windows.Forms.View.List;
-            this.lstviewItems.SelectedIndexChanged += new System.EventHandler(this.lstviewItems_SelectedIndexChanged);
-            // 
-            // lbShow
-            // 
-            this.lbShow.AutoSize = true;
-            this.lbShow.Location = new System.Drawing.Point(14, 433);
-            this.lbShow.Name = "lbShow";
-            this.lbShow.Size = new System.Drawing.Size(41, 12);
-            this.lbShow.TabIndex = 9;
-            this.lbShow.Text = "label1";
             // 
             // btn_Connect
             // 
@@ -194,7 +163,7 @@
             this.lbl_CurrentTime});
             this.statusStrip1.Location = new System.Drawing.Point(0, 499);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1050, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(685, 22);
             this.statusStrip1.TabIndex = 19;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -244,20 +213,21 @@
             this.dgv_data.AllowUserToDeleteRows = false;
             this.dgv_data.AllowUserToResizeColumns = false;
             this.dgv_data.AllowUserToResizeRows = false;
+            this.dgv_data.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgv_data.BackgroundColor = System.Drawing.SystemColors.ButtonHighlight;
             this.dgv_data.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgv_data.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Tag,
             this.Value,
             this.Time});
-            this.dgv_data.Location = new System.Drawing.Point(575, 230);
+            this.dgv_data.Location = new System.Drawing.Point(16, 325);
             this.dgv_data.MultiSelect = false;
             this.dgv_data.Name = "dgv_data";
             this.dgv_data.ReadOnly = true;
             this.dgv_data.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             this.dgv_data.RowTemplate.Height = 23;
             this.dgv_data.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgv_data.Size = new System.Drawing.Size(453, 175);
+            this.dgv_data.Size = new System.Drawing.Size(614, 153);
             this.dgv_data.TabIndex = 20;
             // 
             // Tag
@@ -266,7 +236,6 @@
             this.Tag.HeaderText = "Tag";
             this.Tag.Name = "Tag";
             this.Tag.ReadOnly = true;
-            this.Tag.Width = 150;
             // 
             // Value
             // 
@@ -283,11 +252,22 @@
             this.Time.Name = "Time";
             this.Time.ReadOnly = true;
             // 
+            // List_Items
+            // 
+            this.List_Items.FormattingEnabled = true;
+            this.List_Items.ItemHeight = 12;
+            this.List_Items.Location = new System.Drawing.Point(228, 135);
+            this.List_Items.Name = "List_Items";
+            this.List_Items.Size = new System.Drawing.Size(402, 172);
+            this.List_Items.TabIndex = 21;
+            this.List_Items.DoubleClick += new System.EventHandler(this.List_Items_DoubleClick);
+            // 
             // Frm_OpcClient
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1050, 521);
+            this.ClientSize = new System.Drawing.Size(685, 521);
+            this.Controls.Add(this.List_Items);
             this.Controls.Add(this.dgv_data);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.btn_Connect);
@@ -296,9 +276,6 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.cmb_ServerName);
             this.Controls.Add(this.cmb_ServerNode);
-            this.Controls.Add(this.lbShow);
-            this.Controls.Add(this.lstviewItems);
-            this.Controls.Add(this.btnStart);
             this.Controls.Add(this.tvwGroupList);
             this.Controls.Add(this.tsslblGroupCount);
             this.Controls.Add(this.tsslblItemCount);
@@ -320,9 +297,6 @@
         private System.Windows.Forms.Label tsslblItemCount;
         private System.Windows.Forms.Label tsslblGroupCount;
         private System.Windows.Forms.TreeView tvwGroupList;
-        private System.Windows.Forms.Button btnStart;
-        private System.Windows.Forms.ListView lstviewItems;
-        private System.Windows.Forms.Label lbShow;
         private System.Windows.Forms.Button btn_Connect;
         private System.Windows.Forms.Button btn_RefreshList;
         private System.Windows.Forms.Label label2;
@@ -339,6 +313,7 @@
         private System.Windows.Forms.ContextMenuStrip opcGroupcontextMenuStrip;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.DataGridView dgv_data;
+        private System.Windows.Forms.ListBox List_Items;
         private System.Windows.Forms.DataGridViewTextBoxColumn Tag;
         private System.Windows.Forms.DataGridViewTextBoxColumn Value;
         private System.Windows.Forms.DataGridViewTextBoxColumn Time;
