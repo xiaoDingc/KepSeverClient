@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -18,6 +19,8 @@ namespace KepCom
         public Frm_OpcClient()
         {
             InitializeComponent();
+            //
+            CheckForIllegalCrossThreadCalls = false;
             this.Load += Frm_OpcClient_Load;
         }
 
@@ -65,15 +68,15 @@ namespace KepCom
             this.timer1.Interval = 1000;
             this.timer1.Enabled = true;
             this.timer1.Tick += Timer1_Tick;
+            this.dgv_data.AutoGenerateColumns = false;
         }
 
         private void Timer1_Tick(object sender, EventArgs e)
         {
             this.lbl_CurrentTime.Text = "当前时间: " + DateTime.Now.ToLongTimeString();
-
             if (kepServer != null)
             {
-                if (kepServer.ServerState == (int)OPCServerState.OPCRunning)
+                if(kepServer.ServerState == (int)OPCServerState.OPCRunning)
                 {
                     this.lbl_Status.Text = Enum.GetName(typeof(StatusHelper.ConnectHelper),StatusHelper.ConnectHelper.Connect);
                 }
@@ -82,7 +85,6 @@ namespace KepCom
                     this.lbl_Status.Text = Enum.GetName(typeof(StatusHelper.ConnectHelper), StatusHelper.ConnectHelper.DisConnect);
                 }
             }
-
             if (this.OPCList.Count > 0)
             {
                 if (kepServer != null)
@@ -92,25 +94,36 @@ namespace KepCom
             }
         }
 
+        private static object obj=new object();
         private void btn_RefreshList_Click(object sender, EventArgs e)
         {
-            this.cmb_ServerNode.Items.Clear();
-            IPHostEntry iphost = Dns.GetHostEntry(Environment.MachineName);
-            if (iphost.AddressList.Length>0)
+            //启动任务 开一个新的线程去运行,不然导致速度太慢
+            Task.Factory.StartNew(() =>
             {
-                foreach (var item in iphost.AddressList)
+                this.cmb_ServerNode.Items.Clear();
+                IPHostEntry iphost = Dns.GetHostEntry(Environment.MachineName);
+                if (iphost.AddressList.Length > 0)
                 {
-                    string hostName = Dns.GetHostEntry(item.ToString()).HostName;
-                    if (!this.cmb_ServerNode.Items.Contains(hostName))
+                    foreach (var item in iphost.AddressList)
                     {
-                        this.cmb_ServerNode.Items.Add(hostName);
+                        string hostName = Dns.GetHostEntry(item.ToString()).HostName;
+                        //上锁,用来防止多加hostName
+                        lock (obj)
+                        {
+                            if (!this.cmb_ServerNode.Items.Contains(hostName))
+                            {
+                                this.cmb_ServerNode.Items.Add(hostName);
+                            }
+                        }
+                       
                     }
                 }
-            }
-            else
-            {
-                return;
-            }
+                else
+                {
+                    return;
+                }
+            });
+
         }
        
         //用来标识每一个OPCItem数据的唯一标识
@@ -155,6 +168,7 @@ namespace KepCom
                             path += ".";
                         }
                         path += name;
+
                         this.kepBrowser.MoveDown(name);
                         LoadDataToTree(childNode, path);
                         this.kepBrowser.MoveUp();
@@ -172,9 +186,9 @@ namespace KepCom
 
                 this.kepBrowser.ShowLeafs(false);
                 List<string> leafItems = new List<string>();
-                foreach (object t in this.kepBrowser)
+                foreach (object obj in this.kepBrowser)
                 {
-                    string itemId = this.kepBrowser.GetItemID(t.ToString());
+                    string itemId = this.kepBrowser.GetItemID(obj.ToString());
                     if (itemList.Contains(itemId))
                     {
                         continue;
@@ -208,7 +222,6 @@ namespace KepCom
             return true;
         }
 
-
         //此方法将选中的叶子节点(OPCGroup)下的所有OPCItem显示在ListView中.
         private void tvwGroupList_MouseDown(object sender, MouseEventArgs e)
         {
@@ -225,18 +238,18 @@ namespace KepCom
                     }
                 }
                 this.tvwGroupList.SelectedNode = crtNode;
-
-                if (e.Button == MouseButtons.Right)
-                {
-                    if (crtNode.Tag is OPCServer)
-                    {
-                        this.opcServercontextMenuStrip.Show(this.tvwGroupList, new Point(e.X, e.Y));
-                    }
-                    else if (crtNode.Tag is OPCGroup)
-                    {
-                        this.opcGroupcontextMenuStrip.Show(this.tvwGroupList, new Point(e.X, e.Y));
-                    }
-                }
+                //没看出下面代码的用处
+                //if (e.Button == MouseButtons.Right)
+                //{
+                //    if (crtNode.Tag is OPCServer)
+                //    {
+                //        this.opcServercontextMenuStrip.Show(this.tvwGroupList, new Point(e.X, e.Y));
+                //    }
+                //    else if (crtNode.Tag is OPCGroup)
+                //    {
+                //        this.opcGroupcontextMenuStrip.Show(this.tvwGroupList, new Point(e.X, e.Y));
+                //    }
+                //}
                 if (crtNode.Tag is OPCGroup)
                 {
                     OPCGroup crt_group = crtNode.Tag as OPCGroup;
@@ -257,12 +270,12 @@ namespace KepCom
                     //item.CanonicalDataType.ToString(),
                     itemValue,
                     item.TimeStamp.ToLocalTime().ToString(),
-                    //OPCEnumHelper.GetQuality((OPCQuality)item.Quality),
+                    item.Quality.ToString(),
                     //"0"
                             });
                             listitem.Tag = item.ClientHandle;
-                            this.List_Items.Items.Add(listitem.Text);
-                            //this.lstviewItems.Items.Add(listitem);
+                            //获取文本里的值,而不是整个字符串
+                            this.List_Items.Items.Add(listitem.Text);                          
                         }
                       
                     }
@@ -330,13 +343,11 @@ namespace KepCom
                     {
                         kepServer = new OPCServer();
                         kepServer.Connect(this.cmb_ServerName.Text.Trim(), this.cmb_ServerNode.Text.Trim());
-
                     }
                     else
                     {
                         kepServer.Connect(this.cmb_ServerName.Text.Trim(), this.cmb_ServerNode.Text.Trim());
                     }
-
                 }
                 catch (Exception exception)
                 {
@@ -361,29 +372,34 @@ namespace KepCom
                 this.groupMap.Clear();
                 this.itemMap.Clear();
                 var prog = this.cmb_ServerName.Text.Trim();
-                this.tsslblServerState.Text = "OPC服务[" + prog + "]已连接";
+                
                 TreeNode node = this.tvwGroupList.Nodes.Add(prog);
                 node.Tag = this.kepServer;
                 this.kepBrowser = this.kepServer.CreateBrowser();
                 LoadDataToTree(node, "");
                 this.SetItemsClientHandle();
                 //this.LoadConfig(prog);
-                this.tsslblItemCount.Text = "Item Count " + this.itemMap.Count.ToString();
-                this.tsslblGroupCount.Text = "Group Count " + this.groupMap.Count.ToString();
+                //用于显示连接状态,目前无用,先进行删除
+                //this.tsslblServerState.Text = "OPC服务[" + prog + "]已连接";
+                //this.tsslblItemCount.Text = "Item Count " + this.itemMap.Count.ToString();
+                //this.tsslblGroupCount.Text = "Group Count " + this.groupMap.Count.ToString();
 
             }
             else
             {
+                //断开连接,所需要的处理
                 if (kepServer!=null)
                 {
                     kepServer.Disconnect();
                     kepServer = null;
-
                     this.dgv_data.DataSource = null;
+                    this.tvwGroupList.Nodes.Clear();
+                    this.groupMap.Clear();
+                    this.itemMap.Clear();
                     //清空listbox
                     this.List_Items.Items.Clear();
-                    this.btn_Connect.Text = Enum.GetName(typeof(StatusHelper.ConnectHelper),StatusHelper.ConnectHelper.Connect);
-                    this.lbl_Status.Text = Enum.GetName(typeof(StatusHelper.ConnectHelper), StatusHelper.ConnectHelper.DisConnect);
+                    this.btn_Connect.Text = StatusHelper.ConnectHelper.Connect.ToString();
+                    this.lbl_Status.Text = StatusHelper.ConnectHelper.DisConnect.ToString();
                 }
             }
         }
@@ -397,22 +413,26 @@ namespace KepCom
                 if (value!=null)
                 {
                     this.OPCList[i - 1].Value = value.ToString();
-                    this.OPCList[i - 1].Time = ((DateTime)TimeStamps.GetValue(1)).ToLocalTime();
+                    this.OPCList[i - 1].Time = ((DateTime) TimeStamps.GetValue(1)).ToLocalTime();
+                    this.OPCList[i - 1].Quality = Qualities.GetValue(1).ToString();
                 }
             }
 
-            
             this.dgv_data.DataSource = null;
             this.dgv_data.DataSource = this.OPCList;
 
         }
 
-
-
         private void List_Items_DoubleClick(object sender, EventArgs e)
         {
+            DoubleOrClick();
+        }
+
+        //双击或者右键添加的时候执行此功能
+        private void DoubleOrClick()
+        {
             if (this.List_Items.SelectedItem != null)
-            {             
+            {
                 OPCList.Add(new OpcHelperItem()
                 {
                     Tag = this.List_Items.SelectedItem.ToString()
@@ -426,16 +446,7 @@ namespace KepCom
             int count = this.OPCList.Count;
             for (int i = 0; i < count; i++)
             {
-               
-                if (this.OPCList[i].Tag.Contains("ListViewItem"))
-                {
-                    TempIDList.Add(this.OPCList[i].Tag);
-                }
-                else
-                {
-                    TempIDList.Add(this.OPCList[i].Tag);
-                }
-
+                TempIDList.Add(this.OPCList[i].Tag);
                 ClientHandles.Add(i + 1);
             }
             strTempIDs = (Array)TempIDList.ToArray();
@@ -447,11 +458,20 @@ namespace KepCom
             serverHandles.Add(0);
             for (int i = 0; i < count; i++)
             {
-                var x = strServerHandles.GetValue(i + 1);
-                serverHandles.Add(Convert.ToInt32(x));
+                serverHandles.Add(Convert.ToInt32(strServerHandles.GetValue(i + 1)));
 
             }
             readServerHandles = (Array)serverHandles.ToArray();
+        }
+
+        private void add_Click(object sender, EventArgs e)
+        {
+            DoubleOrClick();
+        }
+
+        private void attribute_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

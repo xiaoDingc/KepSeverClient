@@ -29,10 +29,9 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.tsslblServerState = new System.Windows.Forms.Label();
-            this.tsslblItemCount = new System.Windows.Forms.Label();
-            this.tsslblGroupCount = new System.Windows.Forms.Label();
             this.tvwGroupList = new System.Windows.Forms.TreeView();
+            this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.add = new System.Windows.Forms.ToolStripMenuItem();
             this.btn_Connect = new System.Windows.Forms.Button();
             this.btn_RefreshList = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
@@ -45,52 +44,41 @@
             this.lbl_Status = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripStatusLabel4 = new System.Windows.Forms.ToolStripStatusLabel();
             this.lbl_CurrentTime = new System.Windows.Forms.ToolStripStatusLabel();
-            this.opcServercontextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.opcGroupcontextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.dgv_data = new System.Windows.Forms.DataGridView();
             this.Tag = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Value = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Quality = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.List_Items = new System.Windows.Forms.ListBox();
+            this.attribute = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuStrip.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_data)).BeginInit();
             this.SuspendLayout();
             // 
-            // tsslblServerState
-            // 
-            this.tsslblServerState.AutoSize = true;
-            this.tsslblServerState.Location = new System.Drawing.Point(58, 106);
-            this.tsslblServerState.Name = "tsslblServerState";
-            this.tsslblServerState.Size = new System.Drawing.Size(41, 12);
-            this.tsslblServerState.TabIndex = 0;
-            this.tsslblServerState.Text = "label1";
-            // 
-            // tsslblItemCount
-            // 
-            this.tsslblItemCount.AutoSize = true;
-            this.tsslblItemCount.Location = new System.Drawing.Point(341, 106);
-            this.tsslblItemCount.Name = "tsslblItemCount";
-            this.tsslblItemCount.Size = new System.Drawing.Size(41, 12);
-            this.tsslblItemCount.TabIndex = 1;
-            this.tsslblItemCount.Text = "label2";
-            // 
-            // tsslblGroupCount
-            // 
-            this.tsslblGroupCount.AutoSize = true;
-            this.tsslblGroupCount.Location = new System.Drawing.Point(573, 106);
-            this.tsslblGroupCount.Name = "tsslblGroupCount";
-            this.tsslblGroupCount.Size = new System.Drawing.Size(41, 12);
-            this.tsslblGroupCount.TabIndex = 2;
-            this.tsslblGroupCount.Text = "label3";
-            // 
             // tvwGroupList
             // 
-            this.tvwGroupList.Location = new System.Drawing.Point(16, 135);
+            this.tvwGroupList.Location = new System.Drawing.Point(16, 95);
             this.tvwGroupList.Name = "tvwGroupList";
-            this.tvwGroupList.Size = new System.Drawing.Size(206, 175);
+            this.tvwGroupList.Size = new System.Drawing.Size(218, 196);
             this.tvwGroupList.TabIndex = 3;
             this.tvwGroupList.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tvwGroupList_MouseDown);
+            // 
+            // contextMenuStrip
+            // 
+            this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.add,
+            this.attribute});
+            this.contextMenuStrip.Name = "opcGroupcontextMenuStrip";
+            this.contextMenuStrip.Size = new System.Drawing.Size(101, 48);
+            // 
+            // add
+            // 
+            this.add.Name = "add";
+            this.add.Size = new System.Drawing.Size(152, 22);
+            this.add.Text = "添加";
+            this.add.Click += new System.EventHandler(this.add_Click);
             // 
             // btn_Connect
             // 
@@ -197,16 +185,6 @@
             this.lbl_CurrentTime.Size = new System.Drawing.Size(116, 17);
             this.lbl_CurrentTime.Text = "当前时间：00:00:00";
             // 
-            // opcServercontextMenuStrip
-            // 
-            this.opcServercontextMenuStrip.Name = "opcServercontextMenuStrip";
-            this.opcServercontextMenuStrip.Size = new System.Drawing.Size(61, 4);
-            // 
-            // opcGroupcontextMenuStrip
-            // 
-            this.opcGroupcontextMenuStrip.Name = "opcGroupcontextMenuStrip";
-            this.opcGroupcontextMenuStrip.Size = new System.Drawing.Size(61, 4);
-            // 
             // dgv_data
             // 
             this.dgv_data.AllowUserToAddRows = false;
@@ -219,15 +197,16 @@
             this.dgv_data.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Tag,
             this.Value,
-            this.Time});
-            this.dgv_data.Location = new System.Drawing.Point(16, 325);
+            this.Time,
+            this.Quality});
+            this.dgv_data.Location = new System.Drawing.Point(16, 297);
             this.dgv_data.MultiSelect = false;
             this.dgv_data.Name = "dgv_data";
             this.dgv_data.ReadOnly = true;
             this.dgv_data.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             this.dgv_data.RowTemplate.Height = 23;
             this.dgv_data.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgv_data.Size = new System.Drawing.Size(614, 153);
+            this.dgv_data.Size = new System.Drawing.Size(657, 181);
             this.dgv_data.TabIndex = 20;
             // 
             // Tag
@@ -252,15 +231,29 @@
             this.Time.Name = "Time";
             this.Time.ReadOnly = true;
             // 
+            // Quality
+            // 
+            this.Quality.HeaderText = "Quality";
+            this.Quality.Name = "Quality";
+            this.Quality.ReadOnly = true;
+            // 
             // List_Items
             // 
+            this.List_Items.ContextMenuStrip = this.contextMenuStrip;
             this.List_Items.FormattingEnabled = true;
             this.List_Items.ItemHeight = 12;
-            this.List_Items.Location = new System.Drawing.Point(228, 135);
+            this.List_Items.Location = new System.Drawing.Point(240, 95);
             this.List_Items.Name = "List_Items";
-            this.List_Items.Size = new System.Drawing.Size(402, 172);
+            this.List_Items.Size = new System.Drawing.Size(433, 196);
             this.List_Items.TabIndex = 21;
             this.List_Items.DoubleClick += new System.EventHandler(this.List_Items_DoubleClick);
+            // 
+            // attribute
+            // 
+            this.attribute.Name = "attribute";
+            this.attribute.Size = new System.Drawing.Size(152, 22);
+            this.attribute.Text = "属性";
+            this.attribute.Click += new System.EventHandler(this.attribute_Click);
             // 
             // Frm_OpcClient
             // 
@@ -277,12 +270,10 @@
             this.Controls.Add(this.cmb_ServerName);
             this.Controls.Add(this.cmb_ServerNode);
             this.Controls.Add(this.tvwGroupList);
-            this.Controls.Add(this.tsslblGroupCount);
-            this.Controls.Add(this.tsslblItemCount);
-            this.Controls.Add(this.tsslblServerState);
             this.Name = "Frm_OpcClient";
-            this.Text = "OPC Client";
+            this.Text = " ";
             this.Load += new System.EventHandler(this.Frm_OpcClient_Load);
+            this.contextMenuStrip.ResumeLayout(false);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_data)).EndInit();
@@ -292,10 +283,6 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.Label tsslblServerState;
-        private System.Windows.Forms.Label tsslblItemCount;
-        private System.Windows.Forms.Label tsslblGroupCount;
         private System.Windows.Forms.TreeView tvwGroupList;
         private System.Windows.Forms.Button btn_Connect;
         private System.Windows.Forms.Button btn_RefreshList;
@@ -309,14 +296,16 @@
         private System.Windows.Forms.ToolStripStatusLabel lbl_Status;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel4;
         private System.Windows.Forms.ToolStripStatusLabel lbl_CurrentTime;
-        private System.Windows.Forms.ContextMenuStrip opcServercontextMenuStrip;
-        private System.Windows.Forms.ContextMenuStrip opcGroupcontextMenuStrip;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.DataGridView dgv_data;
         private System.Windows.Forms.ListBox List_Items;
         private System.Windows.Forms.DataGridViewTextBoxColumn Tag;
         private System.Windows.Forms.DataGridViewTextBoxColumn Value;
         private System.Windows.Forms.DataGridViewTextBoxColumn Time;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Quality;
+        private System.Windows.Forms.ToolStripMenuItem add;
+        private System.Windows.Forms.ToolStripMenuItem attribute;
     }
 }
 
