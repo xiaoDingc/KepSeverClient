@@ -32,6 +32,7 @@
             this.tvwGroupList = new System.Windows.Forms.TreeView();
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.add = new System.Windows.Forms.ToolStripMenuItem();
+            this.attribute = new System.Windows.Forms.ToolStripMenuItem();
             this.btn_Connect = new System.Windows.Forms.Button();
             this.btn_RefreshList = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
@@ -51,7 +52,6 @@
             this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Quality = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.List_Items = new System.Windows.Forms.ListBox();
-            this.attribute = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_data)).BeginInit();
@@ -76,9 +76,15 @@
             // add
             // 
             this.add.Name = "add";
-            this.add.Size = new System.Drawing.Size(152, 22);
+            this.add.Size = new System.Drawing.Size(100, 22);
             this.add.Text = "添加";
             this.add.Click += new System.EventHandler(this.add_Click);
+            // 
+            // attribute
+            // 
+            this.attribute.Name = "attribute";
+            this.attribute.Size = new System.Drawing.Size(100, 22);
+            this.attribute.Text = "属性";
             // 
             // btn_Connect
             // 
@@ -208,6 +214,7 @@
             this.dgv_data.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgv_data.Size = new System.Drawing.Size(657, 181);
             this.dgv_data.TabIndex = 20;
+            this.dgv_data.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgv_data_CellDoubleClick);
             // 
             // Tag
             // 
@@ -233,6 +240,8 @@
             // 
             // Quality
             // 
+            this.Quality.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.Quality.DataPropertyName = "Quality";
             this.Quality.HeaderText = "Quality";
             this.Quality.Name = "Quality";
             this.Quality.ReadOnly = true;
@@ -247,13 +256,6 @@
             this.List_Items.Size = new System.Drawing.Size(433, 196);
             this.List_Items.TabIndex = 21;
             this.List_Items.DoubleClick += new System.EventHandler(this.List_Items_DoubleClick);
-            // 
-            // attribute
-            // 
-            this.attribute.Name = "attribute";
-            this.attribute.Size = new System.Drawing.Size(152, 22);
-            this.attribute.Text = "属性";
-            this.attribute.Click += new System.EventHandler(this.attribute_Click);
             // 
             // Frm_OpcClient
             // 
@@ -300,12 +302,12 @@
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.DataGridView dgv_data;
         private System.Windows.Forms.ListBox List_Items;
+        private System.Windows.Forms.ToolStripMenuItem add;
+        private System.Windows.Forms.ToolStripMenuItem attribute;
         private System.Windows.Forms.DataGridViewTextBoxColumn Tag;
         private System.Windows.Forms.DataGridViewTextBoxColumn Value;
         private System.Windows.Forms.DataGridViewTextBoxColumn Time;
         private System.Windows.Forms.DataGridViewTextBoxColumn Quality;
-        private System.Windows.Forms.ToolStripMenuItem add;
-        private System.Windows.Forms.ToolStripMenuItem attribute;
     }
 }
 

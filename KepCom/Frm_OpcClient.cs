@@ -53,7 +53,7 @@ namespace KepCom
         Array strServerHandles;
         Array readServerHandles;
         Array writeServerHandles;
-        Array writeArrayHandles;
+        private Array writeArrayHandles;
         Array readError;
         Array writeError;
         int readTransID;
@@ -64,8 +64,9 @@ namespace KepCom
 
         private void Frm_OpcClient_Load(object sender, EventArgs e)
         {
+            OPC opc = new OPC();
             this.btn_RefreshList_Click(null, null);
-            this.timer1.Interval = 1000;
+            this.timer1.Interval = 100;
             this.timer1.Enabled = true;
             this.timer1.Tick += Timer1_Tick;
             this.dgv_data.AutoGenerateColumns = false;
@@ -76,9 +77,9 @@ namespace KepCom
             this.lbl_CurrentTime.Text = "当前时间: " + DateTime.Now.ToLongTimeString();
             if (kepServer != null)
             {
-                if(kepServer.ServerState == (int)OPCServerState.OPCRunning)
+                if (kepServer.ServerState == (int)OPCServerState.OPCRunning)
                 {
-                    this.lbl_Status.Text = Enum.GetName(typeof(StatusHelper.ConnectHelper),StatusHelper.ConnectHelper.Connect);
+                    this.lbl_Status.Text = Enum.GetName(typeof(StatusHelper.ConnectHelper), StatusHelper.ConnectHelper.Connect);
                 }
                 else
                 {
@@ -94,7 +95,7 @@ namespace KepCom
             }
         }
 
-        private static object obj=new object();
+        private static object obj = new object();
         private void btn_RefreshList_Click(object sender, EventArgs e)
         {
             //启动任务 开一个新的线程去运行,不然导致速度太慢
@@ -115,7 +116,7 @@ namespace KepCom
                                 this.cmb_ServerNode.Items.Add(hostName);
                             }
                         }
-                       
+
                     }
                 }
                 else
@@ -125,7 +126,7 @@ namespace KepCom
             });
 
         }
-       
+
         //用来标识每一个OPCItem数据的唯一标识
         private void SetItemsClientHandle()
         {
@@ -238,18 +239,6 @@ namespace KepCom
                     }
                 }
                 this.tvwGroupList.SelectedNode = crtNode;
-                //没看出下面代码的用处
-                //if (e.Button == MouseButtons.Right)
-                //{
-                //    if (crtNode.Tag is OPCServer)
-                //    {
-                //        this.opcServercontextMenuStrip.Show(this.tvwGroupList, new Point(e.X, e.Y));
-                //    }
-                //    else if (crtNode.Tag is OPCGroup)
-                //    {
-                //        this.opcGroupcontextMenuStrip.Show(this.tvwGroupList, new Point(e.X, e.Y));
-                //    }
-                //}
                 if (crtNode.Tag is OPCGroup)
                 {
                     OPCGroup crt_group = crtNode.Tag as OPCGroup;
@@ -260,7 +249,7 @@ namespace KepCom
                         {
                             string itemId = item.ItemID;
                             string itemValue = Convert.ToString(item.Value);
-                            
+
                             if (item.CanonicalDataType == 11)
                             {
                                 itemValue = Convert.ToInt32(Convert.ToBoolean(itemValue)).ToString();
@@ -275,9 +264,9 @@ namespace KepCom
                             });
                             listitem.Tag = item.ClientHandle;
                             //获取文本里的值,而不是整个字符串
-                            this.List_Items.Items.Add(listitem.Text);                          
+                            this.List_Items.Items.Add(listitem.Text);
                         }
-                      
+
                     }
                     else
                     {
@@ -309,8 +298,6 @@ namespace KepCom
             }
         }
 
-
-
         /// <summary>
         /// 确定本地主机时,动态改变连接的kepServer主机名
         /// </summary>
@@ -334,12 +321,12 @@ namespace KepCom
         /// <param name="e"></param>
         private void btn_Connect_Click(object sender, EventArgs e)
         {
-           //获取连接状态
-            if (this.btn_Connect.Text==Enum.GetName(typeof(StatusHelper.ConnectHelper), StatusHelper.ConnectHelper.Connect))
+            //获取连接状态
+            if (this.btn_Connect.Text == Enum.GetName(typeof(StatusHelper.ConnectHelper), StatusHelper.ConnectHelper.Connect))
             {
                 try
                 {
-                    if (kepServer==null)
+                    if (kepServer == null)
                     {
                         kepServer = new OPCServer();
                         kepServer.Connect(this.cmb_ServerName.Text.Trim(), this.cmb_ServerNode.Text.Trim());
@@ -365,14 +352,14 @@ namespace KepCom
                 kepGruop = kepGruops.Add("group1");
                 kepGruop.IsActive = true;
                 kepGruop.IsSubscribed = true;
-                kepGruop.UpdateRate = 500;
+                kepGruop.UpdateRate = 100;
                 kepGruop.AsyncReadComplete += KepGruop_AsyncReadComplete;
 
                 this.tvwGroupList.Nodes.Clear();
                 this.groupMap.Clear();
                 this.itemMap.Clear();
                 var prog = this.cmb_ServerName.Text.Trim();
-                
+
                 TreeNode node = this.tvwGroupList.Nodes.Add(prog);
                 node.Tag = this.kepServer;
                 this.kepBrowser = this.kepServer.CreateBrowser();
@@ -388,7 +375,7 @@ namespace KepCom
             else
             {
                 //断开连接,所需要的处理
-                if (kepServer!=null)
+                if (kepServer != null)
                 {
                     kepServer.Disconnect();
                     kepServer = null;
@@ -409,21 +396,31 @@ namespace KepCom
             for (int i = 1; i <= NumItems; i++)
             {
                 object value = ItemValues.GetValue(i);
-               
-                if (value!=null)
+                if (value != null)
                 {
                     this.OPCList[i - 1].Value = value.ToString();
-                    this.OPCList[i - 1].Time = ((DateTime) TimeStamps.GetValue(1)).ToLocalTime();
-                    this.OPCList[i - 1].Quality = Qualities.GetValue(1).ToString();
+                    this.OPCList[i - 1].Time = ((DateTime)TimeStamps.GetValue(1)).ToString();
+                    if ((int)Qualities.GetValue(1) == 192)
+                    {
+                        this.OPCList[i - 1].Quality = StatusHelper.ConnectHelper.Good.ToString();
+                    }
+                    else
+                    {
+                        this.OPCList[i - 1].Quality = StatusHelper.ConnectHelper.Bad.ToString();
+                    }
+
                 }
             }
-
             this.dgv_data.DataSource = null;
             this.dgv_data.DataSource = this.OPCList;
 
         }
 
         private void List_Items_DoubleClick(object sender, EventArgs e)
+        {
+            DoubleOrClick();
+        }
+        private void add_Click(object sender, EventArgs e)
         {
             DoubleOrClick();
         }
@@ -451,7 +448,6 @@ namespace KepCom
             }
             strTempIDs = (Array)TempIDList.ToArray();
             strClientHandles = (Array)ClientHandles.ToArray();
-
             kepItems = kepGruop.OPCItems;
             kepItems.AddItems(this.OPCList.Count, ref strTempIDs, ref strClientHandles, out strServerHandles, out iErrors);
             serverHandles.Clear();
@@ -459,18 +455,41 @@ namespace KepCom
             for (int i = 0; i < count; i++)
             {
                 serverHandles.Add(Convert.ToInt32(strServerHandles.GetValue(i + 1)));
-
             }
             readServerHandles = (Array)serverHandles.ToArray();
         }
 
-        private void add_Click(object sender, EventArgs e)
+        private void dgv_data_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
-            DoubleOrClick();
-        }
-
-        private void attribute_Click(object sender, EventArgs e)
-        {
+            if (this.dgv_data.SelectedRows != null)
+            {
+                int index = this.dgv_data.CurrentRow.Index;
+                OpcHelperItem objItem = this.OPCList[index];
+                Frm_Modify objFrm = new Frm_Modify(objItem.Value);
+                DialogResult res = objFrm.ShowDialog();
+                int[] serverHandle = new int[]
+                {
+                    0,
+                    Convert.ToInt32(strServerHandles.GetValue(index + 1))
+                };
+                object[] values = new object[2];
+                string[] modifyResult;
+                writeServerHandles = (Array)serverHandle;
+                if (res == DialogResult.OK)
+                {
+                    modifyResult = objFrm.Tag.ToString().Split('|');
+                    values[1] = modifyResult[0];
+                    writeArrayHandles = (Array)values;
+                    if (modifyResult[1] == "1")
+                    {
+                        kepGruop.AsyncWrite(1, writeServerHandles, writeArrayHandles, out writeError, writeTransID, out writeCancelID);
+                    }
+                    else
+                    {
+                        kepGruop.SyncWrite(1, writeServerHandles, writeArrayHandles, out writeError);
+                    }
+                }
+            }
 
         }
     }

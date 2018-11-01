@@ -11,7 +11,9 @@ namespace KepCom
         public enum ConnectHelper
         {
             Connect,
-            DisConnect
+            DisConnect,
+            Good,
+            Bad
         }
     }
 }
