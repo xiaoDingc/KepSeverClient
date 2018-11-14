@@ -52,6 +52,7 @@
             this.Time = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Quality = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.List_Items = new System.Windows.Forms.ListBox();
+            this.AddAll = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_data)).BeginInit();
@@ -69,21 +70,22 @@
             // 
             this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.add,
-            this.attribute});
+            this.attribute,
+            this.AddAll});
             this.contextMenuStrip.Name = "opcGroupcontextMenuStrip";
-            this.contextMenuStrip.Size = new System.Drawing.Size(101, 48);
+            this.contextMenuStrip.Size = new System.Drawing.Size(153, 92);
             // 
             // add
             // 
             this.add.Name = "add";
-            this.add.Size = new System.Drawing.Size(100, 22);
+            this.add.Size = new System.Drawing.Size(152, 22);
             this.add.Text = "添加";
             this.add.Click += new System.EventHandler(this.add_Click);
             // 
             // attribute
             // 
             this.attribute.Name = "attribute";
-            this.attribute.Size = new System.Drawing.Size(100, 22);
+            this.attribute.Size = new System.Drawing.Size(152, 22);
             this.attribute.Text = "属性";
             // 
             // btn_Connect
@@ -257,6 +259,13 @@
             this.List_Items.TabIndex = 21;
             this.List_Items.DoubleClick += new System.EventHandler(this.List_Items_DoubleClick);
             // 
+            // AddAll
+            // 
+            this.AddAll.Name = "AddAll";
+            this.AddAll.Size = new System.Drawing.Size(152, 22);
+            this.AddAll.Text = "全部添加";
+            this.AddAll.Click += new System.EventHandler(this.AddAll_Click);
+            // 
             // Frm_OpcClient
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -308,6 +317,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Value;
         private System.Windows.Forms.DataGridViewTextBoxColumn Time;
         private System.Windows.Forms.DataGridViewTextBoxColumn Quality;
+        private System.Windows.Forms.ToolStripMenuItem AddAll;
     }
 }
 

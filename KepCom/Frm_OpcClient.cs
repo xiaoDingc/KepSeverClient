@@ -75,24 +75,51 @@ namespace KepCom
         private void Timer1_Tick(object sender, EventArgs e)
         {
             this.lbl_CurrentTime.Text = "当前时间: " + DateTime.Now.ToLongTimeString();
-            if (kepServer != null)
-            {
-                if (kepServer.ServerState == (int)OPCServerState.OPCRunning)
-                {
-                    this.lbl_Status.Text = Enum.GetName(typeof(StatusHelper.ConnectHelper), StatusHelper.ConnectHelper.Connect);
-                }
-                else
-                {
-                    this.lbl_Status.Text = Enum.GetName(typeof(StatusHelper.ConnectHelper), StatusHelper.ConnectHelper.DisConnect);
-                }
-            }
-            if (this.OPCList.Count > 0)
+            try
             {
                 if (kepServer != null)
                 {
-                    kepGruop.AsyncRead(this.OPCList.Count, ref readServerHandles, out readError, readTransID, out readCancelID);
+                    if (kepServer.ServerState == (int)OPCServerState.OPCRunning)
+                    {
+                        this.lbl_Status.Text = Enum.GetName(typeof(StatusHelper.ConnectHelper), StatusHelper.ConnectHelper.Connect);
+                    }
+                    else
+                    {
+                        this.lbl_Status.Text = Enum.GetName(typeof(StatusHelper.ConnectHelper), StatusHelper.ConnectHelper.DisConnect);
+                    }
+                }
+                if (this.OPCList.Count > 0)
+                {
+                    if (kepServer != null)
+                    {
+                        try
+                        {
+                            kepGruop.AsyncRead(this.OPCList.Count, ref readServerHandles, out readError, readTransID, out readCancelID);
+
+                        }
+                        catch (Exception exception)
+                        {
+                            //Console.WriteLine(exception);   
+                        }
+                    }
                 }
             }
+            catch (Exception exception)
+            {
+                kepServer.Disconnect();
+                kepServer = null;
+                MessageBox.Show("当前设备已断开连接");
+                this.dgv_data.DataSource = null;
+                this.tvwGroupList.Nodes.Clear();
+                this.groupMap.Clear();
+                this.itemMap.Clear();
+                //清空listbox
+                this.List_Items.Items.Clear();
+                this.btn_Connect.Text = StatusHelper.ConnectHelper.Connect.ToString();
+                this.lbl_Status.Text = StatusHelper.ConnectHelper.DisConnect.ToString();
+                Console.WriteLine(exception.ToString());
+            }
+            
         }
 
         private static object obj = new object();
@@ -131,10 +158,11 @@ namespace KepCom
         private void SetItemsClientHandle()
         {
             foreach (var item in this.itemMap.Values)
-            {
+            {  
                 item.ClientHandle = item.GetHashCode();
             }
         }
+
 
         //此方法通过OPCBrowser将数据结节加载到TreeView中.
         private bool LoadDataToTree(TreeNode node, string nodeName)
@@ -355,21 +383,18 @@ namespace KepCom
                 kepGruop.UpdateRate = 100;
                 kepGruop.AsyncReadComplete += KepGruop_AsyncReadComplete;
 
+                //Init();
+
                 this.tvwGroupList.Nodes.Clear();
                 this.groupMap.Clear();
                 this.itemMap.Clear();
                 var prog = this.cmb_ServerName.Text.Trim();
-
                 TreeNode node = this.tvwGroupList.Nodes.Add(prog);
                 node.Tag = this.kepServer;
                 this.kepBrowser = this.kepServer.CreateBrowser();
                 LoadDataToTree(node, "");
-                this.SetItemsClientHandle();
-                //this.LoadConfig(prog);
-                //用于显示连接状态,目前无用,先进行删除
-                //this.tsslblServerState.Text = "OPC服务[" + prog + "]已连接";
-                //this.tsslblItemCount.Text = "Item Count " + this.itemMap.Count.ToString();
-                //this.tsslblGroupCount.Text = "Group Count " + this.groupMap.Count.ToString();
+                
+                this.SetItemsClientHandle(); 
 
             }
             else
@@ -398,7 +423,8 @@ namespace KepCom
                 object value = ItemValues.GetValue(i);
                 if (value != null)
                 {
-                    this.OPCList[i - 1].Value = value.ToString();
+                    
+                    this.OPCList[i - 1].Value = value.ToString()+ this.OPCList[i - 1].Tag;
                     this.OPCList[i - 1].Time = ((DateTime)TimeStamps.GetValue(1)).ToString();
                     if ((int)Qualities.GetValue(1) == 192)
                     {
@@ -425,6 +451,34 @@ namespace KepCom
             DoubleOrClick();
         }
 
+        private void Init()
+        {
+                OPCList.Add(new OpcHelperItem()
+                {
+                    Tag = "SimTest.Device1.Group1.S1", 
+                });
+            TempIDList.Clear();
+            ClientHandles.Clear();
+            TempIDList.Add("0");
+            ClientHandles.Add(0);
+            int count = this.OPCList.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    TempIDList.Add(this.OPCList[i].Tag);
+                    ClientHandles.Add(i + 1);
+                }
+                strTempIDs = (Array)TempIDList.ToArray();
+                strClientHandles = (Array)ClientHandles.ToArray();
+                kepItems = kepGruop.OPCItems;
+                kepItems.AddItems(this.OPCList.Count, ref strTempIDs, ref strClientHandles, out strServerHandles, out iErrors);
+                serverHandles.Clear();
+                serverHandles.Add(0);
+                for (int i = 0; i < count; i++)
+                {
+                    serverHandles.Add(Convert.ToInt32(strServerHandles.GetValue(i + 1)));
+                }
+                readServerHandles = (Array)serverHandles.ToArray();
+    }
         //双击或者右键添加的时候执行此功能
         private void DoubleOrClick()
         {
@@ -435,7 +489,6 @@ namespace KepCom
                     Tag = this.List_Items.SelectedItem.ToString()
                 });
             }
-
             TempIDList.Clear();
             ClientHandles.Clear();
             TempIDList.Add("0");
@@ -491,6 +544,42 @@ namespace KepCom
                 }
             }
 
+        }
+
+        private void AddAll_Click(object sender, EventArgs e)
+        {
+            if (this.List_Items.Items.Count >0)
+            {
+                for (int i = 0; i < this.List_Items.Items.Count; i++)
+                {
+                    OPCList.Add(new OpcHelperItem()
+                    {
+                        Tag = this.List_Items.Items[i].ToString(),
+                    });
+                }
+                
+            }
+            TempIDList.Clear();
+            ClientHandles.Clear();
+            TempIDList.Add("0");
+            ClientHandles.Add(0);
+            int count = this.OPCList.Count;
+            for (int i = 0; i < count; i++)
+            {
+                TempIDList.Add(this.OPCList[i].Tag);
+                ClientHandles.Add(i + 1);
+            }
+            strTempIDs = (Array)TempIDList.ToArray();
+            strClientHandles = (Array)ClientHandles.ToArray();
+            kepItems = kepGruop.OPCItems;
+            kepItems.AddItems(this.OPCList.Count, ref strTempIDs, ref strClientHandles, out strServerHandles, out iErrors);
+            serverHandles.Clear();
+            serverHandles.Add(0);
+            for (int i = 0; i < count; i++)
+            {
+                serverHandles.Add(Convert.ToInt32(strServerHandles.GetValue(i + 1)));
+            }
+            readServerHandles = (Array)serverHandles.ToArray();
         }
     }
 }
